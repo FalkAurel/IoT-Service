@@ -1,12 +1,17 @@
 use std::io;
 
 mod http_handling;
+//mod middleware;
+mod data;
+mod method_handling;
+
 use async_std::{
     io::{ReadExt, WriteExt}, net::{TcpListener, TcpStream}, stream::StreamExt
 };
 
-use http_handling::{buffer_to_request, build_response, HttpError};
-use http::{Request, Response, StatusCode};
+use http_handling::{buffer_to_request, build_response, AsBytes};
+use http::{Response, StatusCode};
+use method_handling::method_handling;
 
 
 #[async_std::main]
@@ -25,10 +30,9 @@ async fn handle_connection(mut stream: TcpStream) {
     if let Ok(read_bytes) = stream.read(&mut buffer).await {
         match buffer_to_request(&buffer[..read_bytes]) {
             Ok(request) => {
-                println!("{request:?}");
-                let response: Vec<u8> = build_response(StatusCode::OK, None);
+                let response: Response<String> = method_handling(request);
 
-                stream.write(&response).await;
+                stream.write(&response.bytes()).await;
                 stream.flush().await;
             },
             Err(err) => println!("Error: {err:?}")

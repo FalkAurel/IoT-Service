@@ -1,6 +1,3 @@
-use core::str;
-use std::borrow::Cow;
-
 use http::{header::CONTENT_LENGTH, request::Builder, Method, Request, Response, StatusCode, Uri, Version};
 use httparse::{Header, EMPTY_HEADER, Request as HttpRequest, Status};
 
@@ -17,7 +14,7 @@ pub enum HttpError {
     InvalidVersion,
     RequestCreationError
 }
-pub fn buffer_to_request(buffer: &[u8]) -> Result<Request<String>, HttpError> {
+pub fn buffer_to_request(buffer: &[u8]) -> Result<Request<Vec<u8>>, HttpError> {
     let mut header: [Header; 16] = [EMPTY_HEADER; 16];
     let mut request: HttpRequest = HttpRequest::new(&mut header);
 
@@ -49,23 +46,32 @@ pub fn buffer_to_request(buffer: &[u8]) -> Result<Request<String>, HttpError> {
                 builder = builder.header(header.name, header.value);
             }
 
-            Ok(builder.body(str::from_utf8(&buffer[header_len..]).unwrap().to_string()).map_err(|_| HttpError::RequestCreationError)?)
+            Ok(builder.body(buffer[header_len..].into()).map_err(|_| HttpError::RequestCreationError)?)
         },
         Status::Partial => Err(HttpError::IncompleteHeader)
     }
 }
 
-pub fn build_response(status: StatusCode, message: Option<Cow<String>>) -> Vec<u8>{
-    let response: Response<String> = if let Some(body) = message {
+pub fn build_response(status: StatusCode, message: Option<String>) -> Response<String> {
+    if let Some(body) = message {
         Response::builder().status(status).header(CONTENT_LENGTH, body.len()).body(body.to_string()).unwrap()
     } else {
         Response::builder().status(status).header(CONTENT_LENGTH, 0).body("".to_string()).unwrap()
-    };
+    }
+}
 
-    format!("HTTP/1.1 {} {}\r\nContent-Length: {}\r\n\r\n{}",
-        response.status(),
-        response.status().canonical_reason().unwrap_or("Unknown"),
-        response.body().len(),
-        response.body()
-    ).into()
+impl <T: ToString> AsBytes for Response<T> {
+    fn bytes(&self) -> Vec<u8> {
+        let data: String = self.body().to_string();
+        format!("HTTP/1.1 {} {}\r\nContent-Length: {}\r\n\r\n{}",
+            self.status(),
+            self.status().canonical_reason().unwrap_or("Unknown"),
+            data.len(),
+            data
+        ).into()
+    }
+}
+
+pub trait AsBytes {
+    fn bytes(&self) -> Vec<u8>;
 }
