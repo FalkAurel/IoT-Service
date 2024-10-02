@@ -1,7 +1,8 @@
+use async_std::channel::{unbounded, Sender};
 use http::{Request, Response, StatusCode, Method};
 use serde_json::from_str;
-use std::str::from_utf8;
-use crate::{data::DataFrame, http_handling::build_response};
+use std::{sync::Arc, str::from_utf8};
+use crate::{data::{DataFrame, Sendable}, http_handling::build_response};
 
 
 #[derive(Debug)]
@@ -10,16 +11,33 @@ enum MethodError {
     JSONParsingError
 }
 
-pub fn method_handling(request: Request<Vec<u8>>) -> Response<String> {
+pub async fn method_handling(request: Request<Vec<u8>>, sender: Arc<Sender<Sendable>>) -> Response<String> {
     match request.method() {
         &Method::POST => match post_request(request.body()) {
             Ok(dataframe) => {
-                println!("Received {dataframe:?}");
-                build_response(StatusCode::OK, None)
+                let (sender_response, receiver) = unbounded::<Response<String>>();
+                let sendable: Sendable = Sendable { sender: sender_response , data: Some(dataframe) };
+
+                let _ = sender.send(sendable).await;
+
+                match receiver.recv().await {
+                    Ok(response) => response,
+                    Err(err ) =>build_response(StatusCode::BAD_GATEWAY, Some(format!("{err:?}")))
+                }
             },
             Err(err) => build_response(StatusCode::BAD_REQUEST, Some(format!("{err:?}")))
         },
-        &Method::GET => unimplemented!("Handle get request"),
+        &Method::GET => {
+            let (sender_response, receiver) = unbounded::<Response<String>>();
+            let sendable: Sendable = Sendable { sender: sender_response , data: None };
+
+            let _ = sender.send(sendable).await;
+
+            match receiver.recv().await {
+                Ok(response) => response,
+                Err(err ) =>build_response(StatusCode::BAD_GATEWAY, Some(format!("{err:?}")))
+            }
+        },
         _ => build_response(StatusCode::BAD_REQUEST, Some("Method is not implemented".into()))
     }
 }
