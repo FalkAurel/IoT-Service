@@ -4,12 +4,11 @@ mod method_handling;
 
 use std::{
     collections::VecDeque,
-    io, sync::Arc
+    io, sync::Arc, thread::spawn
 };
 
 use async_std::{
     io::{ReadExt, WriteExt}, net::{TcpListener, TcpStream}, stream::StreamExt, channel::{bounded, Sender},
-    task::spawn,
 };
 
 use data::{DataFrame, Sendable};
@@ -28,7 +27,7 @@ async fn main() -> Result<(), io::Error> {
 
 
 
-    spawn(async move {
+    spawn(|| async move {
         let mut in_memory_buffer: VecDeque<DataFrame> = VecDeque::with_capacity(100);
         while let Ok(message) = receiver.recv().await {
             let Sendable { sender, data } = message;
