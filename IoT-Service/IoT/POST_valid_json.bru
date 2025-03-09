@@ -1,0 +1,25 @@
+meta {
+  name: POST_valid_json
+  type: http
+  seq: 5
+}
+
+post {
+  url: 127.0.0.1:3000
+  body: json
+  auth: basic
+}
+
+auth:basic {
+  username: user2
+  password: i_am_user2
+}
+
+body:json {
+  {
+    "temp": 45,
+    "rpm": 16000,
+    "time_stamp": 22,
+    "device_id": 0
+  }
+}

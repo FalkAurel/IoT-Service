@@ -1,0 +1,31 @@
+meta {
+  name: POST_datatypes_exceed_boundaries_json
+  type: http
+  seq: 4
+}
+
+post {
+  url: 127.0.0.1:3000/api/v1/data?device_id=89&time_start=0&time_end=23
+  body: json
+  auth: basic
+}
+
+params:query {
+  device_id: 89
+  time_start: 0
+  time_end: 23
+}
+
+auth:basic {
+  username: user2
+  password: i_am_user2
+}
+
+body:json {
+  {
+    "temp": 329832094823094,
+    "rpm": 16000,
+    "time_stamp": 23,
+    "device_id": 0
+  }
+}

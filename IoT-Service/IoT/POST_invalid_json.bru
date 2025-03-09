@@ -1,0 +1,32 @@
+meta {
+  name: POST_invalid_json
+  type: http
+  seq: 3
+}
+
+post {
+  url: 127.0.0.1:3000/api/v1/?hi=hjkasd
+  body: json
+  auth: basic
+}
+
+params:query {
+  hi: hjkasd
+}
+
+headers {
+  uri: api/v1
+}
+
+auth:basic {
+  username: user2
+  password: i_am_user2
+}
+
+body:json {
+  { 
+    "temp": 0, 
+    "rpm": 0,
+    "device_id": 0
+  }
+}

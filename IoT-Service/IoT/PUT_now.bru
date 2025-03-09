@@ -1,0 +1,30 @@
+meta {
+  name: PUT_now
+  type: http
+  seq: 10
+}
+
+put {
+  url: 127.0.0.1:3000/api/v1/?device_id=0&time_now=23
+  body: json
+  auth: basic
+}
+
+params:query {
+  device_id: 0
+  time_now: 23
+}
+
+auth:basic {
+  username: user
+  password: i_am_user
+}
+
+body:json {
+  {
+    "device_id": 0,
+    "rpm": 0,
+    "temp": 0,
+    "time_stamp": 22
+  }
+}

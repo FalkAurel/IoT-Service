@@ -1,0 +1,20 @@
+meta {
+  name: TEST_C
+  type: http
+  seq: 1
+}
+
+get {
+  url: POST /api/v1/?hi=hjkasd HTTP/1.1
+  body: json
+  auth: none
+}
+
+params:query {
+  hi: hjkasd HTTP/1.1
+  Authorization: Basic dXNlcjI6aV9hbV91c2VyMg
+}
+
+body:json {
+  {"age": 30, "salary": 75000.50, "name": "John Doe", "initial": "J"}
+}

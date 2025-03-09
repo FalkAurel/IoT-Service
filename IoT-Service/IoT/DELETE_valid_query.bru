@@ -1,0 +1,22 @@
+meta {
+  name: DELETE_valid_query
+  type: http
+  seq: 9
+}
+
+delete {
+  url: 127.0.0.1:3000/api/v1/?device_id=0&time_start=22&time_end=26
+  body: json
+  auth: basic
+}
+
+params:query {
+  device_id: 0
+  time_start: 22
+  time_end: 26
+}
+
+auth:basic {
+  username: user2
+  password: i_am_user2
+}
